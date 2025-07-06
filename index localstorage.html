@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="181534.png">
+  <meta name="theme-color" content="#121212">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker registrado!'))
+        .catch((err) => console.error('Erro ao registrar o SW:', err));
+    }
+  </script>
+  <meta charset="UTF-8">
+  <title>Carteira WEB</title>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      /* Remove o flash azul no toque */
+      -webkit-touch-callout: none;
+      /* Remove menu de toque (iOS) */
+      user-select: none;
+      /* Impede seleção de texto acidental (opcional) */
+      -webkit-user-select: none;
+      /* Compatibilidade com WebKit */
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #f0f0f0;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    button,
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 1rem;
+      background: #1e1e1e;
+      color: #ffffff;
+      border: 1px solid #333;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #333;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+    }
+
+
+    .modal-content {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .saved-item {
+      background: #1a1a1a;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      float: right;
+      color: #ff4d4d;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    details {
+      margin-top: 10px;
+    }
+
+    img.preview {
+      max-width: 100%;
+      margin-top: 15px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      display: none;
+    }
+
+    #addBtn {
+      background: #28a745;
+      border: none;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+
+      button,
+      input,
+      textarea {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div id="center">
+
+  </div>
+  <center>
+    <img id="abrirDEV" src="181534.png" alt="" style="width: 10%;filter:invert();">
+  </center>
+  
+
+  <button id="addBtn" onclick="abrirModal()">+ Adicionar novo documento</button>
+
+
+
+
+
+
+  <label for="searchInput">🔍 Buscar por nome:</label>
+  <input type="text" id="searchInput" placeholder="Ex: CPF, RG..." oninput="filtrarLista()">
+
+
+  <h3>📂 Documentos salvos:</h3>
+  <div id="savedItems"></div>
+
+
+  <center>
+    <h3>🖼️ Documento descriptografado:</h3>
+    <img id="outputImage" class="preview" alt="Imagem será exibida aqui">
+  </center>
+
+  <!-- MODAL -->
+  <div class="modal" id="modalAdd">
+    <div class="modal-content">
+      <h3>Adicionar novo documento</h3>
+
+      <!--<label>🔑 Chave de Acesso:</label>-->
+      <input type="text" id="keyInput" placeholder="Chave de segurança">
+
+      <!--<label>📝 Nome:</label>-->
+      <input type="text" id="titleInput" placeholder="Nome (Ex: CPF, RG, etc...)">
+
+      <!--<label>🖼️ Foto:</label>-->
+      <input type="file" id="imageInput" accept="image/*">
+
+      
+
+      <button onclick="processarImagem()">Processar</button>
+
+      <!--<label>📄 Resultado criptografado:</label>-->
+      <textarea id="outputArea" rows="5"></textarea>
+
+      <button onclick="salvarLocal()">Salvar Documento</button>
+      <button onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+
+    //------------------------
+    console.log("V 10.1")
+    //Controle de commmits
+
+    var ct = 0;
+
+    document.getElementById('abrirDEV').addEventListener('click', () => {
+      ct++;
+      if (ct >= 5) {
+        document.getElementById('abrirDEV').style.filter = 'none'
+      }
+    })
+
+
+    setInterval(() => {
+      if (ct >= 5) {
+
+        var center = document.createElement('center')
+
+
+        var div2 = document.createElement('div')
+        div2.className = 'modal-content';
+
+        var h3 = document.createElement('h3')
+        h3.innerHTML = 'Menu Especial';
+
+        var bt1 = document.createElement('button')
+        bt1.innerHTML = 'Gerar localStorage';
+
+        var bt2 = document.createElement('button')
+        bt2.innerHTML = 'Voltar';
+
+        var bt3 = document.createElement('button')
+        bt3.innerHTML = 'Executar Codigo';
+
+        var bt4 = document.createElement('button')
+        bt4.innerHTML = 'Baixar Codigo .txt';
+
+        var textarealocal = document.createElement('textarea')
+        textarealocal.style.resize = 'none'
+
+
+        document.getElementById('center').append(center)
+        center.append(div2)
+        div2.append(h3)
+        div2.append(bt1)
+        div2.append(bt3)
+        div2.append(bt4)
+        div2.append(bt2)
+        div2.append(textarealocal)
+
+
+
+        bt1.addEventListener('click', () => {
+
+          textarealocal.value = obterLocalStorage();
+          setTimeout(() => {
+            textarealocal.select();
+            textarealocal.setSelectionRange(0, textarealocal.value.length);
+
+            setTimeout(() => {
+              navigator.clipboard.writeText(textarealocal.value)
+                .then(() => alert("Texto copiado com sucesso!"))
+                .catch(err => console.error("Erro ao copiar:", err));
+            }, 2000);
+          }, 1000);
+
+        })
+
+        bt2.addEventListener('click', () => {
+          window.location.reload();
+        })
+
+        bt4.addEventListener('click', () => {
+          if (textarealocal.value != '') {
+            const texto = textarealocal.value;
+            const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "documentos.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+          else {
+            alert('Codigo nao encontrado ou nao gerado')
+          }
+
+        })
+
+        bt3.addEventListener('click', () => {
+          try {
+            eval(textarealocal.value)
+            alert("Documentos importados com sucesso!")
+          } catch (error) {
+            alert('Erro ao importar os documentos')
+          }
+        })
+      }
+      ct = 0;
+    }, 5000);
+
+
+    function obterLocalStorage() {
+      var s = 'localStorage.setItem(\'imagensCriptografadas\',\'';
+      s += localStorage.getItem('imagensCriptografadas')
+      s += '\');'
+      return s;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function filtrarLista() {
+      atualizarLista();
+    }
+
+
+
+    function xorEncryptDecrypt(data, key) {
+      let result = '';
+      for (let i = 0; i < data.length; i++) {
+        result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      return result;
+    }
+
+    function abrirModal() {
+      document.getElementById('modalAdd').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      document.getElementById('modalAdd').style.display = 'none';
+
+      document.getElementById('keyInput').value = '';
+      document.getElementById('titleInput').value = '';
+      document.getElementById('imageInput').value = ''; 
+    }
+
+    let imagemCriptografada = '';
+
+    function processarImagem() {
+      const file = document.getElementById('imageInput').files[0];
+      const key = document.getElementById('keyInput').value;
+
+      if (!file || !key) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const base64Data = e.target.result;
+        const encrypted = xorEncryptDecrypt(base64Data, key);
+        imagemCriptografada = btoa(encrypted);
+        document.getElementById('outputArea').value = imagemCriptografada;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function salvarLocal() {
+      const title = document.getElementById('titleInput').value.trim();
+      const data = imagemCriptografada;
+
+      if (!title || !data) {
+        alert("Preencha todos os campos e processe a imagem do documento.");
+        return;
+      }
+
+      let items = JSON.parse(localStorage.getItem('imagensCriptografadas') || "[]");
+
+      // Ordenar por título (case-insensitive)
+      items.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
+
+      items.push({ title, data });
+      localStorage.setItem('imagensCriptografadas', JSON.stringify(items));
+      fecharModal();
+      atualizarLista();
+      alert("Documento salvo com sucesso!");
+    }
+
+    function atualizarLista() {
+      const container = document.getElementById('savedItems');
+      container.innerHTML = '';
+
+      const filtro = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+      const items = JSON.parse(localStorage.getItem('imagensCriptografadas') || "[]");
+
+      items.forEach((item, index) => {
+        if (!item.title.toLowerCase().includes(filtro)) return;
+
+        const div = document.createElement('div');
+        div.className = 'saved-item';
+
+        //const title = document.createElement('strong');
+        //title.textContent = item.title;
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '❌';
+
+        deleteBtn.onclick = () => {
+          if (confirm(`Deseja excluir "${item.title}" da sua lista de documentos?`)) {
+            items.splice(index, 1);
+            localStorage.setItem('imagensCriptografadas', JSON.stringify(items));
+            atualizarLista();
+          }
+        };
+
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = item.title;
+
+        const inputSenha = document.createElement('input');
+        inputSenha.type = 'text';
+        inputSenha.placeholder = 'Digite a senha de acesso para liberar';
+
+        const botaoRevelar = document.createElement('button');
+        botaoRevelar.textContent = 'Revelar Documento';
+        botaoRevelar.onclick = () => {
+
+
+          try {
+            const unicodeText = atob(item.data);
+            const decrypted = xorEncryptDecrypt(unicodeText, inputSenha.value);
+            document.getElementById('outputImage').src = decrypted;
+            document.getElementById('outputImage').style.display = 'block'
+            inputSenha.value = '';
+
+          } catch (e) {
+            alert("Erro ao revelar o documento. Senha de acesso inválida ou conteúdo corrompido.");
+            document.getElementById('outputImage').style.display = 'none'
+          }
+
+        };
+
+        details.appendChild(summary);
+        details.appendChild(inputSenha);
+        details.appendChild(botaoRevelar);
+
+        //div.appendChild(title);
+        div.appendChild(deleteBtn);
+        div.appendChild(details);
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById('outputImage').addEventListener('error', () => {
+      alert("Erro ao revelar o documento. Senha de acesso inválida ou conteúdo corrompido.");
+      document.getElementById('outputImage').style.display = 'none'
+    });
+
+    atualizarLista();
+  </script>
+
+</body>
+
+</html>
